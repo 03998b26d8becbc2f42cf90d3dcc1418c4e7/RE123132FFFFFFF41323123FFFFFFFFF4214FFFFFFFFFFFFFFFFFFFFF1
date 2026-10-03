@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Business · E-Receipt</title>
+  <!-- Font Awesome & Inter (kept for fidelity) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --primary:      #c82de3;
+      --primary-glow: rgba(200, 45, 227, 0.15);
+      --primary-dim:  rgba(200, 45, 227, 0.06);
+      --bg-deep:      #080808;
+      --card-bg:      rgba(14, 14, 14, 0.95);
+      --border:       rgba(255, 255, 255, 0.07);
+      --border-glow:  rgba(200, 45, 227, 0.3);
+      --text-main:    #f4f4f5;
+      --text-muted:   #71717a;
+      --text-soft:    #a1a1aa;
+      --green:        #22c55e;
+      --green-dim:    rgba(34, 197, 94, 0.1);
+      --green-border: rgba(34, 197, 94, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -300px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(200,45,227,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Card ─────────────────────────────────────────────────────────── */
+    .receipt {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 40px -15px rgba(0, 0, 0, 0.8);
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────── */
+    .header {
+      padding: 30px 32px 26px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand-name {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #fff 40%, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+
+    .brand-label {
+      margin-top: 5px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+    }
+
+    .approved {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* ── Sections ─────────────────────────────────────────────────────── */
+    .section {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section:last-of-type {
+      border-bottom: none;
+    }
+
+    .section-title {
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    /* ── Rows ─────────────────────────────────────────────────────────── */
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      gap: 12px;
+    }
+
+    .row + .row {
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .row-key {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .row-val {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      text-align: right;
+      max-width: 65%;
+      word-break: break-word;
+    }
+
+    .row-val.accent {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .row-val.white {
+      color: var(--text-main);
+    }
+
+    .row-val.mono {
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.02em;
+      color: var(--text-soft);
+    }
+
+    /* role pill (kept for consistency, although not used) */
+    .pill {
+      display: inline-block;
+      background: var(--primary-dim);
+      border: 1px solid rgba(200,45,227,0.2);
+      border-radius: 100px;
+      padding: 2px 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Note ─────────────────────────────────────────────────────────── */
+    .note {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .note a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    .note a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    /* ── Signature ────────────────────────────────────────────────────── */
+    .sig-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .sig-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .sig-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .sig-role {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .sig-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .sig-verified {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+
+    .sig-signed {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    .footer {
+      padding: 14px 32px;
+      background: rgba(255,255,255,0.015);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .footer-brand {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .footer-id {
+      font-size: 0.63rem;
+      font-family: 'Courier New', monospace;
+      color: rgba(255,255,255,0.15);
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 480px) {
+      .header,
+      .section {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .footer {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .row {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .row-val {
+        max-width: 100%;
+        text-align: left;
+        width: 100%;
+      }
+
+      .sig-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sig-right {
+        align-items: flex-start;
+        margin-top: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="receipt">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="brand-name">Moon Business</div>
+      <div class="brand-label">Authorized Reseller Card</div>
+    </div>
+    <div class="approved">
+      <div class="dot"></div>
+      Approved
+    </div>
+  </div>
+
+  <!-- Reseller Details -->
+  <div class="section">
+    <div class="section-title">Reseller Details</div>
+    <div class="row">
+      <div class="row-key">Nickname</div>
+      <div class="row-val accent">Gringo</div>
+    </div>
+    <div class="row">
+      <div class="row-key">Join Date</div>
+      <div class="row-val white">3 October 2026</div>
+    </div>
+    <div class="row">
+      <div class="row-key">Expiry Date</div>
+      <div class="row-val">No expiry</div>
+    </div>
+    <div class="row">
+      <div class="row-key">Country</div>
+      <div class="row-val">Brazil</div>
+    </div>
+    <div class="row">
+      <div class="row-key">Languages</div>
+      <div class="row-val">Portuguese, English</div>
+    </div>
+    <div class="row">
+      <div class="row-key">Apps</div>
+      <div class="row-val">Telegram</div>
+    </div>
+  </div>
+
+  <!-- Socials (fixed: closed div) -->
+  <div class="section">
+    <div class="section-title">Socials</div>
+    <div class="row">
+      <div class="row-key">Telegram</div>
+      <div class="row-val accent">t.me/samuel_425</div>
+    </div>
+  </div>
+
+  <!-- Administrator / Contact -->
+  <div class="section">
+    <div class="section-title">Administrator</div>
+    <div class="row">
+      <div class="row-key">Contact</div>
+      <div class="row-val">@mwbush &nbsp;·&nbsp; Mart</div>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="section">
+    <div class="section-title">Description</div>
+    <div class="note">
+      Thanks for joining Moon and help us grow together.
+      <a href="mailto:contact@moonnetwork.online">contact@moonnetwork.online</a>
+      or <a href="https://t.me/moonc2netz" target="_blank">t.me/moonc2netz</a>
+    </div>
+  </div>
+
+  <!-- Signature -->
+  <div class="section">
+    <div class="section-title">Administrator Signature</div>
+    <div class="sig-row">
+      <div class="sig-left">
+        <div class="sig-name">Mart</div>
+        <div class="sig-role">Moon Network &nbsp;·&nbsp; Authorized Administrator</div>
+      </div>
+      <div class="sig-right">
+        <div class="sig-verified">Verified</div>
+        <div class="sig-signed">Signed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">Moon Business</div>
+  </div>
+
+</div>
+
+</body>
+</html>
